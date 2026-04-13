@@ -4,16 +4,24 @@ import { JWT_SECRET } from "@repo/backend-common/config";
 import { middleware } from "./middleware";
 import { CreateRoomSchema, CreateUserSchema, SigninSchema } from "@repo/common/types"
 const app = express();
+import { prismaclient } from "@repo/db/client";
 
-app.post("/signup",(req,res) =>{
+app.post("/signup", async (req,res) =>{
     //db call 
-    const data = CreateUserSchema.safeParse(req.body);
-    if(!data.success){
+    const parsedData = CreateUserSchema.safeParse(req.body);
+    if(!parsedData.success){
         res.json({
             message:"Incoorect Inputs"
         })
         return;
     }
+    await prismaclient.user.create({
+        data:{
+            email:parsedData.data?.username,
+            password: parsedData.data.password,
+            name:parsedData.data.name
+        }
+    })
     res.json({
         userId:"123"
     })
