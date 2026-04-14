@@ -6,6 +6,8 @@ import { CreateRoomSchema, CreateUserSchema, SigninSchema } from "@repo/common/t
 const app = express();
 import { prismaclient } from "@repo/db/client";
 
+app.use(express.json());
+
 app.post("/signup", async (req,res) =>{
     //db call 
     const parsedData = CreateUserSchema.safeParse(req.body);
@@ -15,7 +17,8 @@ app.post("/signup", async (req,res) =>{
         })
         return;
     }
-    await prismaclient.user.create({
+    try{
+       const user =  await prismaclient().user.create({
         data:{
             email:parsedData.data?.username,
             password: parsedData.data.password,
@@ -23,8 +26,14 @@ app.post("/signup", async (req,res) =>{
         }
     })
     res.json({
-        userId:"123"
+        userId: user.id
     })
+    } catch(e){
+        res.status(411).json({
+            message:"User Already exists with this username"
+        })
+    }
+    
 })
 
 app.post("/signin",(req,res)=>{
